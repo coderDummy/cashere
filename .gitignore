@@ -1,0 +1,36 @@
+# Dependencies
+# Folder berisi semua library dari npm/yarn
+/node_modules
+
+# Build output
+# Folder hasil kompilasi/build proyek
+/dist
+/build
+
+# Log files
+# File log error atau debug otomatis
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment variables
+# File berisi rahasia/kunci API, JANGAN PERNAH di-commit!
+.env
+.env.local
+.env.*.local
+
+# Editor directories and files
+# File konfigurasi spesifik untuk VSCode, WebStorm, dll.
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# System files
+# File sistem operasi (macOS, Windows)
+.DS_Store
+Thumbs.db

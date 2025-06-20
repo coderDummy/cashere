@@ -1,11 +1,12 @@
-import React, { useState } from 'react'
-import { Clock, CheckCircle, XCircle, Play, Package } from 'lucide-react'
+import { useState } from 'react'
+import { Clock, CheckCircle, XCircle, Play, Package, Filter } from 'lucide-react'
 import { useOrders } from '../hooks/useOrders'
 import { Order } from '../types'
 
 export function OrdersView() {
   const { orders, updateOrderStatus } = useOrders()
   const [filter, setFilter] = useState<'all' | 'pending' | 'in_progress' | 'done' | 'cancelled'>('all')
+  const [showMobileFilter, setShowMobileFilter] = useState(false)
 
   const filteredOrders = orders.filter(order => 
     filter === 'all' || order.status === filter
@@ -41,31 +42,81 @@ export function OrdersView() {
     await updateOrderStatus(orderId, newStatus)
   }
 
+  const filterOptions = [
+    { value: 'all', label: 'All' },
+    { value: 'pending', label: 'Pending' },
+    { value: 'in_progress', label: 'In Progress' },
+    { value: 'done', label: 'Done' },
+    { value: 'cancelled', label: 'Cancelled' }
+  ]
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">Orders</h2>
+        <h2 className="text-xl lg:text-2xl font-bold text-gray-900">Orders</h2>
         
-        {/* Status Filter */}
-        <div className="flex gap-2">
-          {['all', 'pending', 'in_progress', 'done', 'cancelled'].map(status => (
+        {/* Mobile Filter Button */}
+        <button
+          onClick={() => setShowMobileFilter(true)}
+          className="lg:hidden flex items-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+        >
+          <Filter className="w-4 h-4" />
+          Filter
+        </button>
+
+        {/* Desktop Status Filter */}
+        <div className="hidden lg:flex gap-2">
+          {filterOptions.map(option => (
             <button
-              key={status}
-              onClick={() => setFilter(status as any)}
+              key={option.value}
+              onClick={() => setFilter(option.value as any)}
               className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                filter === status
+                filter === option.value
                   ? 'bg-gray-900 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              {status === 'all' ? 'All' : status.replace('_', ' ')}
+              {option.label}
             </button>
           ))}
         </div>
       </div>
 
+      {/* Mobile Filter Modal */}
+      {showMobileFilter && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end z-50 lg:hidden">
+          <div className="bg-white rounded-t-lg w-full p-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Filter Orders</h3>
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              {filterOptions.map(option => (
+                <button
+                  key={option.value}
+                  onClick={() => {
+                    setFilter(option.value as any)
+                    setShowMobileFilter(false)
+                  }}
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    filter === option.value
+                      ? 'bg-gray-900 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowMobileFilter(false)}
+              className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Orders List */}
-      <div className="space-y-4">
+      <div className="space-y-3 lg:space-y-4">
         {filteredOrders.length === 0 ? (
           <div className="text-center py-12">
             <Package className="w-12 h-12 mx-auto text-gray-300 mb-4" />
@@ -75,9 +126,9 @@ export function OrdersView() {
         ) : (
           filteredOrders.map(order => (
             <div key={order.id} className="bg-white rounded-lg border border-gray-200 p-4">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-4 gap-3">
+                <div className="flex-1">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
                     <h3 className="font-semibold text-gray-900">
                       Order #{order.id.slice(-8)}
                     </h3>
@@ -92,13 +143,13 @@ export function OrdersView() {
                   </p>
                 </div>
                 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between sm:flex-col sm:items-end gap-3">
                   <span className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ${getStatusColor(order.status)}`}>
                     {getStatusIcon(order.status)}
                     {order.status.replace('_', ' ')}
                   </span>
                   <span className="font-bold text-lg text-gray-900">
-                    ${order.total_amount.toFixed(2)}
+                    Rp {new Intl.NumberFormat('id-ID').format(order.total_amount)}
                   </span>
                 </div>
               </div>
@@ -116,7 +167,7 @@ export function OrdersView() {
                             <span className="text-gray-500 ml-2">({item.notes})</span>
                           )}
                         </span>
-                        <span>${(item.price * item.quantity).toFixed(2)}</span>
+                        <span>Rp {(item.price * item.quantity).toFixed(2)}</span>
                       </div>
                     ))}
                   </div>
@@ -132,7 +183,7 @@ export function OrdersView() {
               )}
 
               {/* Status Actions */}
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 {order.status === 'pending' && (
                   <>
                     <button

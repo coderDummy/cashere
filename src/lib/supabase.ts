@@ -85,7 +85,6 @@ export type Database = {
           order_id: string
           product_id: string
           quantity: number
-          price: number
           notes?: string
           created_at: string
         }
@@ -94,7 +93,6 @@ export type Database = {
           order_id: string
           product_id: string
           quantity: number
-          price: number
           notes?: string
           created_at?: string
         }
@@ -103,7 +101,6 @@ export type Database = {
           order_id?: string
           product_id?: string
           quantity?: number
-          price?: number
           notes?: string
         }
       }

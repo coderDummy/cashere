@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { ShoppingCart, Plus, Minus, Send } from 'lucide-react'
+import { useState } from 'react'
+import { ShoppingCart, Plus, Minus, Send, ArrowLeft, Search } from 'lucide-react'
 import { useProducts } from '../hooks/useProducts'
 import { useOrders } from '../hooks/useOrders'
 import { CartItem } from '../types'
@@ -109,7 +109,7 @@ export function CustomerView() {
             className="relative flex items-center gap-2 px-3 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-800 transition-colors"
           >
             <ShoppingCart className="w-4 h-4" />
-            <span>Cart</span>
+            <span className="hidden sm:inline">Cart</span>
             {cartItemsCount > 0 && (
               <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                 {cartItemsCount}
@@ -122,20 +122,23 @@ export function CustomerView() {
       <div className="p-4">
         {/* Search and Filters */}
         <div className="mb-6">
-          <input
-            type="text"
-            placeholder="Search menu items..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent mb-4"
-          />
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="Search menu items..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent text-base"
+            />
+          </div>
           
-          <div className="flex gap-2 overflow-x-auto">
+          <div className="flex gap-2 overflow-x-auto pb-2">
             {categories.map(category => (
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${
+                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                   selectedCategory === category
                     ? 'bg-gray-900 text-white'
                     : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
@@ -150,23 +153,23 @@ export function CustomerView() {
         {/* Products Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredProducts.map(product => (
-            <div key={product.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div key={product.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
               <div className="aspect-square bg-gray-100 flex items-center justify-center">
                 <span className="text-3xl font-bold text-gray-400">
                   {product.name.charAt(0)}
                 </span>
               </div>
               <div className="p-4">
-                <h3 className="font-medium text-gray-900 mb-1">{product.name}</h3>
+                <h3 className="font-medium text-gray-900 mb-1 line-clamp-2">{product.name}</h3>
                 <p className="text-lg font-bold text-gray-900 mb-2">
-                  ${product.price.toFixed(2)}
+                  Rp {new Intl.NumberFormat('id-ID').format(product.price)}
                 </p>
                 <p className="text-xs text-gray-500 mb-3">
                   {product.stock} available
                 </p>
                 <button
                   onClick={() => addToCart(product)}
-                  className="w-full bg-gray-900 text-white py-2 rounded-md hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
+                  className="w-full bg-gray-900 text-white py-2.5 rounded-lg hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 font-medium"
                 >
                   <Plus className="w-4 h-4" />
                   Add to Cart
@@ -180,21 +183,21 @@ export function CustomerView() {
       {/* Cart Modal */}
       {showCart && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-t-lg sm:rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          <div className="bg-white rounded-t-xl sm:rounded-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 sticky top-0 bg-white rounded-t-xl">
               <h3 className="text-lg font-semibold text-gray-900">Your Order</h3>
               <button
                 onClick={() => setShowCart(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                ×
+                <ArrowLeft className="w-5 h-5" />
               </button>
             </div>
 
             <div className="p-4">
               {/* Table Number */}
               <div className="mb-4">
-                <label htmlFor="tableNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="tableNumber" className="block text-sm font-medium text-gray-700 mb-2">
                   Table Number *
                 </label>
                 <input
@@ -203,7 +206,7 @@ export function CustomerView() {
                   value={tableNumber}
                   onChange={(e) => setTableNumber(e.target.value)}
                   placeholder="e.g., B11"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent text-base"
                 />
               </div>
 
@@ -216,31 +219,31 @@ export function CustomerView() {
               ) : (
                 <div className="space-y-3 mb-4">
                   {cart.map(item => (
-                    <div key={item.product.id} className="bg-gray-50 p-3 rounded-md">
-                      <div className="flex items-start justify-between mb-2">
+                    <div key={item.product.id} className="bg-gray-50 p-4 rounded-lg">
+                      <div className="flex items-start justify-between mb-3">
                         <h4 className="font-medium text-gray-900 text-sm">
                           {item.product.name}
                         </h4>
                         <span className="font-medium text-gray-900">
-                          ${(item.product.price * item.quantity).toFixed(2)}
+                          Rp {new Intl.NumberFormat('id-ID').format(item.product.price * item.quantity)}
                         </span>
                       </div>
                       
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-3">
                         <button
                           onClick={() => updateCartItem(item.product.id, item.quantity - 1)}
-                          className="w-6 h-6 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
+                          className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors"
                         >
-                          <Minus className="w-3 h-3" />
+                          <Minus className="w-4 h-4" />
                         </button>
-                        <span className="w-8 text-center text-sm font-medium">
+                        <span className="w-8 text-center font-medium">
                           {item.quantity}
                         </span>
                         <button
                           onClick={() => updateCartItem(item.product.id, item.quantity + 1)}
-                          className="w-6 h-6 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
+                          className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors"
                         >
-                          <Plus className="w-3 h-3" />
+                          <Plus className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
@@ -250,16 +253,16 @@ export function CustomerView() {
 
               {/* Total and Submit */}
               {cart.length > 0 && (
-                <div>
-                  <div className="flex items-center justify-between mb-4 pt-4 border-t border-gray-200">
+                <div className="sticky bottom-0 bg-white pt-4 border-t border-gray-200">
+                  <div className="flex items-center justify-between mb-4">
                     <span className="text-lg font-semibold text-gray-900">Total:</span>
                     <span className="text-xl font-bold text-gray-900">
-                      ${cartTotal.toFixed(2)}
+                          Rp {new Intl.NumberFormat('id-ID').format(cartTotal)}
                     </span>
                   </div>
                   <button
                     onClick={handleSubmitOrder}
-                    className="w-full bg-gray-900 text-white py-3 rounded-md font-medium hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
+                    className="w-full bg-gray-900 text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
                   >
                     <Send className="w-4 h-4" />
                     Submit Order

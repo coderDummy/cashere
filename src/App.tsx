@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useAuth } from './hooks/useAuth'
 import { Layout } from './components/Layout'
 import { LoginForm } from './components/LoginForm'
@@ -7,6 +7,7 @@ import { OrdersView } from './components/OrdersView'
 import { ProductsView } from './components/ProductsView'
 import { DashboardView } from './components/DashboardView'
 import { CustomerView } from './components/CustomerView'
+import { Toaster } from 'react-hot-toast' // <-- Pastikan ini sudah di-import
 
 function App() {
   const { user, loading } = useAuth()
@@ -29,17 +30,21 @@ function App() {
   // Admin mode (authentication required)
   if (!user) {
     return (
-      <div>
-        <LoginForm />
-        <div className="fixed bottom-4 right-4">
-          <button
-            onClick={() => setIsCustomerMode(true)}
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm"
-          >
-            Browse as Customer
-          </button>
+      // Toaster ditambahkan di sini untuk halaman login
+      <>
+        <Toaster position="top-center" />
+        <div>
+          <LoginForm />
+          <div className="fixed bottom-4 right-4">
+            <button
+              onClick={() => setIsCustomerMode(true)}
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm"
+            >
+              Browse as Customer
+            </button>
+          </div>
         </div>
-      </div>
+      </>
     )
   }
 
@@ -59,9 +64,13 @@ function App() {
   }
 
   return (
-    <Layout currentView={currentView} onViewChange={setCurrentView}>
-      {renderCurrentView()}
-    </Layout>
+    // Toaster ditambahkan di sini untuk layout utama setelah login
+    <>
+      <Toaster position="top-center" reverseOrder={false} />
+      <Layout currentView={currentView} onViewChange={setCurrentView}>
+        {renderCurrentView()}
+      </Layout>
+    </>
   )
 }
 
