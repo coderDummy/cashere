@@ -38,8 +38,6 @@ export function useOrders() {
     items: Array<{
       product_id: string
       quantity: number
-      price: number
-      notes?: string
     }>
   }) => {
     try {
