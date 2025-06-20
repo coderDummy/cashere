@@ -43,7 +43,9 @@ export function useOrders() {
     }>
   }) => {
     try {
-      // Create order
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error("User not authenticated")
+
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert([{
@@ -51,17 +53,19 @@ export function useOrders() {
           total_amount: orderData.total_amount,
           payment_method: orderData.payment_method,
           notes: orderData.notes,
-          status: 'pending'
+          status: 'pending',
+          cashier_id: user.id 
         }])
         .select()
         .single()
 
       if (orderError) throw orderError
 
-      // Create order items
+// Create order items
       const orderItems = orderData.items.map(item => ({
-        ...item,
-        order_id: order.id
+      product_id: item.product_id,
+      qty: item.quantity,
+      order_id: order.id
       }))
 
       const { error: itemsError } = await supabase
@@ -89,18 +93,18 @@ export function useOrders() {
 
       if (error) throw error
       
-      // If order is marked as done, deduct stock
-      if (status === 'done') {
-        const order = orders.find(o => o.id === id)
-        if (order?.order_items) {
-          for (const item of order.order_items) {
-            await supabase.rpc('deduct_stock', {
-              product_id: item.product_id,
-              quantity: item.quantity
-            })
-          }
-        }
-      }
+      // // If order is marked as done, deduct stock
+      // if (status === 'done') {
+      //   const order = orders.find(o => o.id === id)
+      //   if (order?.order_items) {
+      //     for (const item of order.order_items) {
+      //       await supabase.rpc('deduct_stock', {
+      //         product_id: item.product_id,
+      //         quantity: item.quantity
+      //       })
+      //     }
+      //   }
+      // }
 
       setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o))
       return { data, error: null }

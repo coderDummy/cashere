@@ -6,6 +6,7 @@ import { useBarcode } from '../hooks/useBarcode'
 import { Product, CartItem, PaymentMethod } from '../types'
 import { BarcodeScanner } from './BarcodeScanner'
 import { CheckoutModal } from './CheckoutModal'
+import {toast} from  'react-hot-toast'
 
 export function POSView() {
   const { products } = useProducts()
@@ -22,7 +23,7 @@ export function POSView() {
     if (product) {
       addToCart(product)
     } else {
-      alert('Product not found for barcode: ' + code)
+      toast.error('Product not found for barcode: ' + code);
     }
   })
 
@@ -40,7 +41,7 @@ export function POSView() {
 
   const addToCart = (product: Product, quantity: number = 1) => {
     if (product.stock < quantity) {
-      alert('Insufficient stock')
+      toast.error('Insufficient stock');
       return
     }
 
@@ -49,7 +50,7 @@ export function POSView() {
       if (existing) {
         const newQuantity = existing.quantity + quantity
         if (newQuantity > product.stock) {
-          alert('Insufficient stock')
+          toast.error('Insufficient stock');
           return prev
         }
         return prev.map(item =>
@@ -70,7 +71,7 @@ export function POSView() {
 
     const product = products.find(p => p.id === productId)
     if (product && quantity > product.stock) {
-      alert('Insufficient stock')
+      toast.error('Insufficient stock');
       return
     }
 
@@ -87,8 +88,11 @@ export function POSView() {
     setCart(prev => prev.filter(item => item.product.id !== productId))
   }
 
-  const handleCheckout = async (paymentMethod: PaymentMethod, tableNumber?: string, notes?: string) => {
-    if (cart.length === 0) return
+const handleCheckout = async (paymentMethod: PaymentMethod, tableNumber?: string, notes?: string) => {
+    if (cart.length === 0) {
+      toast.error("Cart is empty!"); 
+      return;
+    }
 
     const orderData = {
       table_number: tableNumber,
@@ -97,21 +101,22 @@ export function POSView() {
       notes,
       items: cart.map(item => ({
         product_id: item.product.id,
-        quantity: item.quantity,
-        price: item.product.price,
-        notes: item.notes
+        quantity: item.quantity
+        // Harga dan notes item tidak perlu dikirim lagi sesuai diskusi sebelumnya
       }))
     }
 
-    const { error } = await createOrder(orderData)
-    
-    if (error) {
-      alert('Failed to create order: ' + error)
-    } else {
-      setCart([])
-      setShowCheckout(false)
-      setShowMobileCart(false)
-      alert('Order created successfully!')
+    const orderPromise = createOrder(orderData);
+    await toast.promise(orderPromise, {
+      loading: 'Processing your order...',
+      success: 'Order created successfully!',
+      error: (err) => `Error: ${err.message}` // Menggunakan err.message agar lebih jelas
+    });
+    const { error } = await orderPromise;
+    if (!error) {
+      setCart([]);
+      setShowCheckout(false);
+      setShowMobileCart(false);
     }
   }
 
