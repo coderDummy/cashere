@@ -9,7 +9,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
-        name: 'POS Cashier',
+        name: 'Dought Studio',
         short_name: 'POS',
         description: 'Professional Point of Sale System',
         theme_color: '#000000',

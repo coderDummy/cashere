@@ -29,11 +29,11 @@ export function CheckoutModal({ cart, total, onCheckout, onClose }: CheckoutModa
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 sticky top-0 bg-white rounded-t-lg">
           <h3 className="text-lg font-semibold text-gray-900">Checkout</h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-gray-400 hover:text-gray-600 p-1"
           >
             <X className="w-5 h-5" />
           </button>
@@ -43,16 +43,16 @@ export function CheckoutModal({ cart, total, onCheckout, onClose }: CheckoutModa
           {/* Order Summary */}
           <div className="space-y-2">
             <h4 className="font-medium text-gray-900">Order Summary</h4>
-            <div className="bg-gray-50 rounded-md p-3 space-y-2">
+            <div className="bg-gray-50 rounded-md p-3 space-y-2 max-h-40 overflow-y-auto">
               {cart.map(item => (
                 <div key={item.product.id} className="flex justify-between text-sm">
                   <span>{item.product.name} x{item.quantity}</span>
-                  <span>${(item.product.price * item.quantity).toFixed(2)}</span>
+                  <span>Rp {new Intl.NumberFormat('id-ID').format(item.product.price * item.quantity)}</span>
                 </div>
               ))}
               <div className="border-t border-gray-200 pt-2 flex justify-between font-medium">
                 <span>Total</span>
-                <span>${total.toFixed(2)}</span>
+                <span>Rp {new Intl.NumberFormat('id-ID').format(total)}</span>
               </div>
             </div>
           </div>
@@ -110,12 +110,12 @@ export function CheckoutModal({ cart, total, onCheckout, onClose }: CheckoutModa
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
               placeholder="Special instructions..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
             />
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-3 pt-4 sticky bottom-0 bg-white">
             <button
               type="button"
               onClick={onClose}
