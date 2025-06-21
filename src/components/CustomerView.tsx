@@ -26,7 +26,6 @@ export function CustomerView({ tableNumber: tableNumberFromUrl }: CustomerViewPr
   const [searchTerm, setSearchTerm] = useState('');
   const [showCart, setShowCart] = useState(false);
   const [showGuestInfoModal, setShowGuestInfoModal] = useState(false);
-  const [setIsSubmitting] = useState(false);
   const [guestInfo, setGuestInfo] = useState<GuestInfo | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
@@ -105,8 +104,7 @@ export function CustomerView({ tableNumber: tableNumberFromUrl }: CustomerViewPr
   };
 
   const handleConfirmOrder = async (name: string, phoneNumber: string) => {
-    setIsSubmitting(true);
-    setShowGuestInfoModal(false); // Langsung tutup modal info
+    setShowGuestInfoModal(false);
     localStorage.setItem('dought_studio_guest_info', JSON.stringify({ name, phone: phoneNumber }));
     setGuestInfo({ name, phone: phoneNumber });
 
@@ -133,17 +131,14 @@ export function CustomerView({ tableNumber: tableNumberFromUrl }: CustomerViewPr
     if (!error && newOrder) {
       setCart([]);
       setCompletedOrder(newOrder as Order);
-      setShowPaymentModal(true); // Buka modal pembayaran
+      setShowPaymentModal(true);
     }
-    setIsSubmitting(false);
   };
 
   const handleClosePaymentModal = () => {
     setShowPaymentModal(false);
     setCompletedOrder(null);
     toast.success('Thank you!');
-    // Opsi: refresh halaman untuk memulai sesi baru yang bersih.
-    // window.location.reload(); 
   }
 
   if (loading) {
