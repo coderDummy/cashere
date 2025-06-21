@@ -26,7 +26,7 @@ export function CustomerView({ tableNumber: tableNumberFromUrl }: CustomerViewPr
   const [searchTerm, setSearchTerm] = useState('');
   const [showCart, setShowCart] = useState(false);
   const [showGuestInfoModal, setShowGuestInfoModal] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [setIsSubmitting] = useState(false);
   const [guestInfo, setGuestInfo] = useState<GuestInfo | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);

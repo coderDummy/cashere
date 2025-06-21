@@ -169,7 +169,7 @@ export function OrdersView() {
                         <div className="flex justify-between text-sm">
                           <span className="font-medium text-gray-800">{item.product?.name} x {item.qty}</span>
                           <span className="font-semibold">
-                            Rp {(item.product?.price * item.qty).toLocaleString('id-ID')}
+                            Rp {( (item.product?.price ?? 0) * item.qty).toLocaleString('id-ID')}
                           </span>
                         </div>
 

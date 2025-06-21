@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { Order, OrderItem } from '../types' // Pastikan OrderItem di-import
+import { Order } from '../types' // Pastikan OrderItem di-import
 
 export function useOrders() {
   const [orders, setOrders] = useState<Order[]>([])
