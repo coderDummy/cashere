@@ -24,16 +24,54 @@ export function useProducts() {
     }
   }
 
-  const addProduct = async (product: Omit<Product, 'id' | 'created_at' | 'updated_at'>) => {
+  // Fungsi helper untuk upload gambar
+  const uploadProductImage = async (file: File): Promise<string | null> => {
     try {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Math.random()}.${fileExt}`
+      const filePath = `${fileName}`
+      
+      const { error: uploadError } = await supabase.storage
+        .from('product-images') // Pastikan nama bucket ini sesuai
+        .upload(filePath, file)
+
+      if (uploadError) {
+        throw uploadError
+      }
+
+      const { data } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(filePath)
+
+      return data.publicUrl
+    } catch (error) {
+      console.error('Error uploading image: ', error)
+      return null
+    }
+  }
+
+  const addProduct = async (
+    productData: Omit<Product, 'id' | 'created_at' | 'updated_at'>,
+    imageFile?: File | null
+  ) => {
+    try {
+      let imageUrl = productData.image_url; // Default ke URL yang sudah ada (jika ada)
+
+      if (imageFile) {
+        const publicUrl = await uploadProductImage(imageFile);
+        if (publicUrl) {
+          imageUrl = publicUrl;
+        }
+      }
+
       const { data, error } = await supabase
         .from('products')
-        .insert([product])
+        .insert([{ ...productData, image_url: imageUrl }])
         .select()
         .single()
 
       if (error) throw error
-      setProducts(prev => [...prev, data])
+      setProducts(prev => [...prev, data].sort((a, b) => a.name.localeCompare(b.name)))
       return { data, error: null }
     } catch (err) {
       const error = err instanceof Error ? err.message : 'Failed to add product'
@@ -41,11 +79,25 @@ export function useProducts() {
     }
   }
 
-  const updateProduct = async (id: string, updates: Partial<Product>) => {
+  const updateProduct = async (
+    id: string,
+    updates: Partial<Omit<Product, 'id' | 'created_at' | 'updated_at'>>,
+    imageFile?: File | null
+  ) => {
     try {
+      let imageUrl = updates.image_url;
+
+      if (imageFile) {
+        // TODO: Hapus gambar lama dari storage jika ada untuk menghemat ruang
+        const publicUrl = await uploadProductImage(imageFile);
+        if (publicUrl) {
+          imageUrl = publicUrl;
+        }
+      }
+
       const { data, error } = await supabase
         .from('products')
-        .update({ ...updates, updated_at: new Date().toISOString() })
+        .update({ ...updates, image_url: imageUrl, updated_at: new Date().toISOString() })
         .eq('id', id)
         .select()
         .single()
@@ -61,6 +113,7 @@ export function useProducts() {
 
   const deleteProduct = async (id: string) => {
     try {
+      // TODO: Hapus juga gambar dari Supabase Storage saat produk dihapus
       const { error } = await supabase
         .from('products')
         .delete()

@@ -5,6 +5,8 @@ export interface Product {
   stock: number
   category: string
   barcode?: string
+  description?: string; // <-- TAMBAHKAN INI
+  image_url?: string;   // <-- TAMBAHKAN INI
   created_at: string
   updated_at: string
 }

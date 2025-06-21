@@ -106,7 +106,7 @@ export function CustomerView({ tableNumber: tableNumberFromUrl }: CustomerViewPr
 
   const handleConfirmOrder = async (name: string, phoneNumber: string) => {
     setIsSubmitting(true);
-    setShowGuestInfoModal(false);
+    setShowGuestInfoModal(false); // Langsung tutup modal info
     localStorage.setItem('dought_studio_guest_info', JSON.stringify({ name, phone: phoneNumber }));
     setGuestInfo({ name, phone: phoneNumber });
 
@@ -133,7 +133,7 @@ export function CustomerView({ tableNumber: tableNumberFromUrl }: CustomerViewPr
     if (!error && newOrder) {
       setCart([]);
       setCompletedOrder(newOrder as Order);
-      setShowPaymentModal(true);
+      setShowPaymentModal(true); // Buka modal pembayaran
     }
     setIsSubmitting(false);
   };
@@ -141,8 +141,9 @@ export function CustomerView({ tableNumber: tableNumberFromUrl }: CustomerViewPr
   const handleClosePaymentModal = () => {
     setShowPaymentModal(false);
     setCompletedOrder(null);
-    // Refresh halaman agar kembali ke menu utama setelah pembayaran selesai
-    window.location.reload();
+    toast.success('Thank you!');
+    // Opsi: refresh halaman untuk memulai sesi baru yang bersih.
+    // window.location.reload(); 
   }
 
   if (loading) {
@@ -222,14 +223,22 @@ export function CustomerView({ tableNumber: tableNumberFromUrl }: CustomerViewPr
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {filteredProducts.map(product => (
               <div key={product.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex flex-col">
-                <div className="aspect-video bg-gray-100 flex items-center justify-center">
-                  <span className="text-4xl font-bold text-gray-400">
-                    {product.name.charAt(0)}
-                  </span>
+                <div className="aspect-video bg-gray-100 flex items-center justify-center overflow-hidden">
+                  {product.image_url ? (
+                    <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-4xl font-bold text-gray-400">
+                      {product.name.charAt(0)}
+                    </span>
+                  )}
                 </div>
                 <div className="p-4 flex flex-col flex-grow">
-                  <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2 flex-grow">{product.name}</h3>
-                  <p className="text-lg font-bold text-gray-900 my-2">
+                  <h3 className="font-semibold text-gray-900 mb-1">{product.name}</h3>
+                  {product.description && (
+                    <p className="text-xs text-gray-500 mb-2 line-clamp-2">{product.description}</p>
+                  )}
+                  <div className="flex-grow"></div>
+                  <p className="text-lg font-bold text-gray-900 mt-2 mb-3">
                     Rp {new Intl.NumberFormat('id-ID').format(product.price)}
                   </p>
                   <button
