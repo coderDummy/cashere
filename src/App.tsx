@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from './hooks/useAuth'
 import { Layout } from './components/Layout'
 import { LoginForm } from './components/LoginForm'
@@ -7,14 +7,31 @@ import { OrdersView } from './components/OrdersView'
 import { ProductsView } from './components/ProductsView'
 import { DashboardView } from './components/DashboardView'
 import { CustomerView } from './components/CustomerView'
-import { Toaster } from 'react-hot-toast' // <-- Pastikan ini sudah di-import
+import { Toaster } from 'react-hot-toast'
 
 function App() {
   const { user, loading } = useAuth()
   const [currentView, setCurrentView] = useState('pos')
-  const [isCustomerMode, setIsCustomerMode] = useState(false)
+  
+  const [guestTableNumber, setGuestTableNumber] = useState<string | null>(null)
 
-  if (loading) {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    // UBAH DI SINI: dari 'table_number' menjadi 't'
+    const tableNumFromUrl = params.get('t');
+
+    if (tableNumFromUrl) {
+      localStorage.setItem('dought_studio_table_number', tableNumFromUrl);
+      setGuestTableNumber(tableNumFromUrl);
+    } else {
+      const tableNumFromStorage = localStorage.getItem('dought_studio_table_number');
+      if (tableNumFromStorage) {
+        setGuestTableNumber(tableNumFromStorage);
+      }
+    }
+  }, []);
+
+  if (loading && !guestTableNumber) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
@@ -22,28 +39,20 @@ function App() {
     )
   }
 
-  // Customer mode (no authentication required)
-  if (isCustomerMode) {
-    return <CustomerView />
+  if (guestTableNumber) {
+    return (
+      <>
+        <Toaster position="top-center" reverseOrder={false} />
+        <CustomerView tableNumber={guestTableNumber} />
+      </>
+    )
   }
 
-  // Admin mode (authentication required)
   if (!user) {
     return (
-      // Toaster ditambahkan di sini untuk halaman login
       <>
         <Toaster position="top-center" />
-        <div>
-          <LoginForm />
-          <div className="fixed bottom-4 right-4">
-            <button
-              onClick={() => setIsCustomerMode(true)}
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm"
-            >
-              Browse as Customer
-            </button>
-          </div>
-        </div>
+        <LoginForm />
       </>
     )
   }
@@ -64,7 +73,6 @@ function App() {
   }
 
   return (
-    // Toaster ditambahkan di sini untuk layout utama setelah login
     <>
       <Toaster position="top-center" reverseOrder={false} />
       <Layout currentView={currentView} onViewChange={setCurrentView}>

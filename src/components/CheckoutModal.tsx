@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { X, CreditCard, Banknote, Smartphone, Building } from 'lucide-react'
 import { CartItem, PaymentMethod } from '../types'
+import { CornerDownRight, /* ikon-ikon lain yang sudah ada */ } from 'lucide-react'
 
 interface CheckoutModalProps {
   cart: CartItem[]
@@ -43,14 +44,29 @@ export function CheckoutModal({ cart, total, onCheckout, onClose }: CheckoutModa
           {/* Order Summary */}
           <div className="space-y-2">
             <h4 className="font-medium text-gray-900">Order Summary</h4>
-            <div className="bg-gray-50 rounded-md p-3 space-y-2 max-h-40 overflow-y-auto">
+            <div className="bg-gray-50 rounded-md p-3 space-y-3 max-h-48 overflow-y-auto">
               {cart.map(item => (
-                <div key={item.product.id} className="flex justify-between text-sm">
-                  <span>{item.product.name} x{item.quantity}</span>
-                  <span>Rp {new Intl.NumberFormat('id-ID').format(item.product.price * item.quantity)}</span>
+                <div key={item.product.id}>
+                  {/* Baris untuk Nama Produk dan Harga */}
+                  <div className="flex justify-between text-sm">
+                    <span className="font-medium text-gray-800">{item.product.name} x{item.quantity}</span>
+                    <span>Rp {new Intl.NumberFormat('id-ID').format(item.product.price * item.quantity)}</span>
+                  </div>
+                  
+                  {/* Tampilkan Notes HANYA jika ada isinya */}
+                  {item.notes && (
+                    <div className="flex items-start gap-2 pt-1 pl-2">
+                      <CornerDownRight className="w-3.5 h-3.5 text-gray-400 mt-0.5 flex-shrink-0" />
+                      <p className="text-xs text-gray-600 italic">
+                        {item.notes}
+                      </p>
+                    </div>
+                  )}
                 </div>
               ))}
-              <div className="border-t border-gray-200 pt-2 flex justify-between font-medium">
+
+              {/* Baris untuk Total */}
+              <div className="border-t border-gray-200 pt-2 mt-3 flex justify-between text-base font-bold">
                 <span>Total</span>
                 <span>Rp {new Intl.NumberFormat('id-ID').format(total)}</span>
               </div>

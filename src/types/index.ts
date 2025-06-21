@@ -5,6 +5,8 @@ export interface Product {
   stock: number
   category: string
   barcode?: string
+  description?: string; // <-- TAMBAHKAN INI
+  image_url?: string;   // <-- TAMBAHKAN INI
   created_at: string
   updated_at: string
 }
@@ -26,7 +28,7 @@ export interface OrderItem {
   id: string
   order_id: string
   product_id: string
-  quantity: number
+  qty: number
   price: number
   notes?: string
   created_at: string

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Clock, CheckCircle, XCircle, Play, Package, Filter } from 'lucide-react'
 import { useOrders } from '../hooks/useOrders'
 import { Order } from '../types'
+import { CornerDownRight, /* ikon-ikon lain yang sudah ada */ } from 'lucide-react'
 
 export function OrdersView() {
   const { orders, updateOrderStatus } = useOrders()
@@ -155,19 +156,32 @@ export function OrdersView() {
               </div>
 
               {/* Order Items */}
+{/* Jangan lupa import ikonnya di atas file */}
+              {/* import { CornerDownRight } from 'lucide-react' */}
+
               {order.order_items && (
                 <div className="mb-4">
                   <h4 className="font-medium text-gray-900 mb-2">Items:</h4>
-                  <div className="space-y-1">
+                  <div className="space-y-3"> {/* Beri sedikit jarak lebih antar item */}
                     {order.order_items.map(item => (
-                      <div key={item.id} className="flex justify-between text-sm">
-                        <span>
-                          {item.product?.name} x{item.quantity}
-                          {item.notes && (
-                            <span className="text-gray-500 ml-2">({item.notes})</span>
-                          )}
-                        </span>
-                        <span>Rp {(item.price * item.quantity).toFixed(2)}</span>
+                      <div key={item.id}>
+                        {/* Baris untuk Nama Item dan Harga */}
+                        <div className="flex justify-between text-sm">
+                          <span className="font-medium text-gray-800">{item.product?.name} x {item.qty}</span>
+                          <span className="font-semibold">
+                            Rp {( (item.product?.price ?? 0) * item.qty).toLocaleString('id-ID')}
+                          </span>
+                        </div>
+
+                        {/* Tampilkan Notes HANYA jika ada isinya */}
+                        {item.notes && (
+                          <div className="flex items-start gap-2 pt-1 pl-2">
+                            <CornerDownRight className="w-3.5 h-3.5 text-gray-400 mt-0.5 flex-shrink-0" />
+                            <p className="text-xs text-gray-600 italic">
+                              {item.notes}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

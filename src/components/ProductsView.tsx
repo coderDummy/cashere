@@ -37,14 +37,21 @@ export function ProductsView() {
     }
   }
 
-  const handleSaveProduct = async (productData: Omit<Product, 'id' | 'created_at' | 'updated_at'>) => {
-    if (editingProduct) {
-      await updateProduct(editingProduct.id, productData)
-    } else {
-      await addProduct(productData)
-    }
-    setShowModal(false)
+const handleSaveProduct = async (
+  productData: Omit<Product, 'id' | 'created_at' | 'updated_at'>,
+  imageFile?: File | null
+) => {
+  let result;
+  if (editingProduct) {
+    result = await updateProduct(editingProduct.id, productData, imageFile);
+  } else {
+    result = await addProduct(productData, imageFile);
   }
+  if (!result.error) {
+    setShowModal(false);
+  }
+  return result; // <-- TAMBAHKAN BARIS INI untuk mengembalikan hasil
+};
 
   return (
     <div className="space-y-4 lg:space-y-6">
