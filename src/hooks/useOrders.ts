@@ -1,6 +1,8 @@
+// src/hooks/useOrders.ts
+
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { Order } from '../types'
+import { Order, OrderItem } from '../types' // Pastikan OrderItem di-import
 
 export function useOrders() {
   const [orders, setOrders] = useState<Order[]>([])
@@ -14,6 +16,7 @@ export function useOrders() {
         .from('orders')
         .select(`
           *,
+          user:users (*),
           order_items (
             *,
             product:products (*)
@@ -22,7 +25,16 @@ export function useOrders() {
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      setOrders(data || [])
+      
+      const formattedData = data?.map(order => ({
+        ...order,
+        order_items: order.order_items.map((item: any) => ({
+          ...item,
+          quantity: item.qty // Buat properti `quantity` dari `qty`
+        }))
+      })) || []
+
+      setOrders(formattedData as Order[])
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch orders')
     } finally {
@@ -35,14 +47,33 @@ export function useOrders() {
     total_amount: number
     payment_method?: string
     notes?: string
+    name?: string
+    phoneNumber?: string
     items: Array<{
       product_id: string
       quantity: number
+      notes?: string
+      // Kita tidak perlu mengirim harga dari UI
     }>
   }) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error("User not authenticated")
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      let finalUserId: string | null = null;
+
+      if (authUser) {
+        let { data: userProfile } = await supabase.from('users').select('id').eq('auth_id', authUser.id).single();
+        if (!userProfile) {
+          const { data: newUserProfile } = await supabase.from('users').insert({ auth_id: authUser.id, role: 'admin', name: authUser.email }).select('id').single();
+          userProfile = newUserProfile;
+        }
+        finalUserId = userProfile?.id ?? null;
+      } else if (orderData.phoneNumber) {
+        const { data: guestUser, error: guestUserError } = await supabase.from('users').upsert({ phone_number: orderData.phoneNumber, name: orderData.name, role: 'guest' }, { onConflict: 'phone_number', ignoreDuplicates: false }).select('id').single();
+        if (guestUserError) throw guestUserError;
+        finalUserId = guestUser.id;
+      } else {
+        throw new Error('User information is missing.');
+      }
 
       const { data: order, error: orderError } = await supabase
         .from('orders')
@@ -52,24 +83,23 @@ export function useOrders() {
           payment_method: orderData.payment_method,
           notes: orderData.notes,
           status: 'pending',
-          cashier_id: user.id 
+          user_id: finalUserId
         }])
         .select()
         .single()
 
       if (orderError) throw orderError
 
-// Create order items
+      // PENERJEMAHAN DARI UI (quantity) -> KE DATABASE (qty)
+      // dan pastikan tidak mengirim `price`
       const orderItems = orderData.items.map(item => ({
-      product_id: item.product_id,
-      qty: item.quantity,
-      order_id: order.id
+        order_id: order.id,
+        product_id: item.product_id,
+        qty: item.quantity, // Ubah 'quantity' UI menjadi 'qty' DB
+        notes: item.notes
       }))
 
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems)
-
+      const { error: itemsError } = await supabase.from('order_items').insert(orderItems)
       if (itemsError) throw itemsError
 
       await fetchOrders()
@@ -90,20 +120,6 @@ export function useOrders() {
         .single()
 
       if (error) throw error
-      
-      // // If order is marked as done, deduct stock
-      // if (status === 'done') {
-      //   const order = orders.find(o => o.id === id)
-      //   if (order?.order_items) {
-      //     for (const item of order.order_items) {
-      //       await supabase.rpc('deduct_stock', {
-      //         product_id: item.product_id,
-      //         quantity: item.quantity
-      //       })
-      //     }
-      //   }
-      // }
-
       setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o))
       return { data, error: null }
     } catch (err) {
@@ -114,20 +130,20 @@ export function useOrders() {
 
   useEffect(() => {
     fetchOrders()
-
-    // Subscribe to real-time updates
-    const subscription = supabase
-      .channel('orders')
+    const channel = supabase
+      .channel('realtime-orders')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'orders' },
-        () => {
-          fetchOrders()
-        }
+        () => fetchOrders()
+      )
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'order_items'},
+        () => fetchOrders()
       )
       .subscribe()
 
     return () => {
-      subscription.unsubscribe()
+      supabase.removeChannel(channel)
     }
   }, [])
 

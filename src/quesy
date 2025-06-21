@@ -1,0 +1,125 @@
+Peran: Anda bertindak sebagai seorang Quality Assurance (QA) Engineer yang sangat teliti dan berpengalaman.
+
+Tujuan: Buatkan serangkaian skenario tes (test scenarios) yang komprehensif dalam bentuk satu tabel spreadsheet untuk fitur Create Schedule berdasarkan informasi yang saya berikan.
+
+
+
+[Informasi Pendukung untuk Fitur]
+
+(Lampirkan semua informasi relevan yang Anda miliki tentang fitur yang akan diuji. Semakin lengkap, semakin baik skenario yang dihasilkan. Gunakan format di bawah ini.)
+
+1. Deskripsi Fungsional / Dokumentasi:
+Creating Task Schedule
+Required Permission:
+
+View schedule
+
+Create schedule
+
+There are two ways to create a task schedule. Click the "New" button to create a single schedule or select "Bulk" to create multiple schedules at once.
+
+
+
+Single Schedule
+When creating a new schedule, you must fill in the following information. Required fields are marked with an asterisk (*).
+
+
+
+
+
+
+
+Task Flow: Select the task flow to use for this schedule (e.g., Pickup, Delivery). Once selected, additional form fields will appear based on the initial page of your flow settings.
+
+
+
+Schedule Name: Enter a specific name to help differentiate this schedule from others you may create.
+
+Assignee: Choose the assignee for the task schedule. The available assignees are based on the hub selected in the upper-right corner.
+
+Repeat Cycle: Set the time and cycle for when the schedule will be active. For more details on each cycle option, refer to this page.
+
+Bulk Schedule
+If you need to create multiple schedules at once, select "Bulk".
+
+
+
+Select Task Flow.
+
+Choose Repeat Cycle.
+
+Download the Template before uploading.
+
+The Excel template includes two sheets:
+
+Sheet 1 for schedule data, including fields such as "Name," "Address," and "Coordinate."
+
+Sheet 2 for setting up the time. Required fields are marked with an asterisk (*).
+
+
+
+Example of the "Field Sales" flow in Sheet 1:
+
+
+
+
+
+Example of the "Weekly" cycle sheet:
+
+
+
+
+
+Before submitting, you can review the uploaded schedules to check for any missing or invalid data.
+
+
+
+A success message will confirm once your task schedule has been created: "The task schedule has been created successfully."
+
+
+
+
+
+2. Aktor / Peran Pengguna (User Roles):
+tidak ada role spesifik, tapi tiap user memilki permission fitur yang berbeda beda. Jika user tidak memiliki akses, akan muncul pop-up 'You don't have permission'."
+
+3. Kriteria Penerimaan / User Stories (Jika ada):
+[Jika ada, tuliskan user story atau acceptance criteria. Contoh: "Sebagai Admin, saya ingin bisa mengedit semua field dalam task agar saya bisa memperbaiki kesalahan data."].
+
+4. Informasi Teknis (Opsional, tapi Membantu):
+https://apidoc.mile.app/internal#tag/Task-Schedule
+
+5. Desain UI/UX & File Terkait:
+(Lampirkan semua file yang relevan di sini, seperti yang Anda lakukan sebelumnya).
+
+[File gambar mockup atau screenshot dari UI]
+[File HTML dari halaman terkait (jika ada)]
+[File relevan lainnya, seperti template excel, dll.]
+[Format Output yang Diinginkan]
+
+Buatkan skenario dalam format tabel tunggal dengan kolom berikut:
+ID Scenario, Menu, Feature, Type, Skenario, PreCondition, Step, Expected
+
+[Instruksi Akhir & Aturan Pembuatan Skenario]
+
+Kelengkapan Skenario: Pastikan skenario mencakup semua aspek berikut:
+
+Skenario Positif (alur kerja normal dan berhasil).
+Skenario Negatif (input tidak valid, kondisi error, alur gagal).
+Skenario Berbasis Hak Akses (Permission).
+
+Format Kolom:
+
+Isi kolom Type hanya dengan 'Positive' atau 'Negative'.
+Judul pada kolom Skenario harus berupa kalimat deskriptif langsung (contoh: "User berhasil login dengan kredensial yang valid"), tanpa menggunakan prefix seperti [Positive] atau [UI/UX].
+setaip judul di mulai dengan kata `User `
+Logika Penutupan Modal (Wajib):
+
+Untuk semua pop-up/modal, tambahkan skenario untuk memastikan modal dapat ditutup dengan 3 cara: (1) Mengklik tombol Cancel/Close atau ikon X, (2) Menekan tombol ESC pada keyboard, dan (3) Mengklik area di luar modal (backdrop).
+Untuk setiap modal di mana pengguna dapat menginput atau mengubah data, tambahkan skenario pengujian konfirmasi "Discard Changes". Jika pengguna telah membuat perubahan dan mencoba menutup modal (dengan salah satu dari 3 cara di atas), harus muncul pop-up konfirmasi. Uji kasus berikut:
+Klik "Yes": Modal tertutup, data yang diinput hilang.
+Klik "No" / Tekan ESC / Klik di luar pop-up konfirmasi: Pop-up konfirmasi tertutup, dan modal utama tetap terbuka dengan data yang tidak berubah.
+Struktur & Pengurutan:
+
+Sajikan semua skenario dalam satu tabel spreadsheet gabungan.
+Urutkan semua skenario berdasarkan kolom Feature terlebih dahulu, lalu di dalam setiap fitur, urutkan berdasarkan Type (semua skenario 'Positive' harus muncul sebelum skenario 'Negative').

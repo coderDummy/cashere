@@ -26,7 +26,7 @@ export interface OrderItem {
   id: string
   order_id: string
   product_id: string
-  quantity: number
+  qty: number
   price: number
   notes?: string
   created_at: string
