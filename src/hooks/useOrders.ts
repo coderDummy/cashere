@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import { Order, CustomerMode } from '../types';
+import { Order, CustomerMode, OrderStatus } from '../types';
 
 export function useOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -79,7 +79,7 @@ export function useOrders() {
           payment_method: orderData.payment_method,
           customer_mode: orderData.customer_mode,
           notes: orderData.notes,
-          status: 'pending',
+          status: 'waiting_payment', // PERUBAHAN: Status awal sekarang 'waiting_payment'
           user_id: finalUserId
         }])
         .select()
@@ -105,7 +105,7 @@ export function useOrders() {
     }
   };
 
-  const updateOrderStatus = async (id: string, status: Order['status']) => {
+  const updateOrderStatus = async (id: string, status: OrderStatus) => {
     try {
       const { data, error } = await supabase
         .from('orders')
@@ -115,7 +115,7 @@ export function useOrders() {
         .single();
 
       if (error) throw error;
-      setOrders(prev => prev.map(o => o.id === id ? { ...data as Order, status: data.status } : o));
+      await fetchOrders(); // Memuat ulang data untuk sinkronisasi
       return { data, error: null };
     } catch (err) {
       const error = err instanceof Error ? err.message : 'Failed to update order';

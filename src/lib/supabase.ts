@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { Product, Order, OrderItem, User, CustomerMode } from '../types';
+import { Product, Order, OrderItem, User, CustomerMode, OrderStatus } from '../types';
 
 // const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 // const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -31,10 +31,10 @@ export type Database = {
         Insert: {
           id?: string;
           table_number?: string;
-          status?: 'pending' | 'in_progress' | 'done' | 'cancelled';
+          status?: OrderStatus; // Menggunakan tipe baru
           total_amount: number;
           payment_method?: string;
-          customer_mode?: CustomerMode; // Kolom baru
+          customer_mode?: CustomerMode;
           notes?: string;
           user_id?: string;
           created_at?: string;
@@ -43,10 +43,10 @@ export type Database = {
         Update: {
           id?: string;
           table_number?: string;
-          status?: 'pending' | 'in_progress' | 'done' | 'cancelled';
+          status?: OrderStatus; // Menggunakan tipe baru
           total_amount?: number;
           payment_method?: string;
-          customer_mode?: CustomerMode; // Kolom baru
+          customer_mode?: CustomerMode;
           notes?: string;
           user_id?: string;
           updated_at?: string;
