@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { Product } from '../types'
 
@@ -7,7 +7,7 @@ export function useProducts() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       setLoading(true)
       const { data, error } = await supabase
@@ -22,22 +22,19 @@ export function useProducts() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  // Fungsi helper untuk upload gambar
   const uploadProductImage = async (file: File): Promise<string | null> => {
     try {
       const fileExt = file.name.split('.').pop()
-      const fileName = `${Math.random()}.${fileExt}`
+      const fileName = `${crypto.randomUUID()}.${fileExt}`
       const filePath = `${fileName}`
       
       const { error: uploadError } = await supabase.storage
-        .from('product-images') // Pastikan nama bucket ini sesuai
+        .from('product-images')
         .upload(filePath, file)
 
-      if (uploadError) {
-        throw uploadError
-      }
+      if (uploadError) throw uploadError
 
       const { data } = supabase.storage
         .from('product-images')
@@ -49,19 +46,27 @@ export function useProducts() {
       return null
     }
   }
+  
+  const deleteProductImage = async (imageUrl: string) => {
+    try {
+      const imagePath = imageUrl.split('/').pop()
+      if (imagePath) {
+        await supabase.storage.from('product-images').remove([imagePath])
+      }
+    } catch (error) {
+      console.error('Failed to delete old image, but continuing operation:', error)
+    }
+  }
 
   const addProduct = async (
     productData: Omit<Product, 'id' | 'created_at' | 'updated_at'>,
     imageFile?: File | null
   ) => {
     try {
-      let imageUrl = productData.image_url; // Default ke URL yang sudah ada (jika ada)
+      let imageUrl: string | null | undefined = productData.image_url
 
       if (imageFile) {
-        const publicUrl = await uploadProductImage(imageFile);
-        if (publicUrl) {
-          imageUrl = publicUrl;
-        }
+        imageUrl = await uploadProductImage(imageFile);
       }
 
       const { data, error } = await supabase
@@ -85,14 +90,13 @@ export function useProducts() {
     imageFile?: File | null
   ) => {
     try {
-      let imageUrl = updates.image_url;
+      let imageUrl: string | null | undefined = updates.image_url
 
       if (imageFile) {
-        // TODO: Hapus gambar lama dari storage jika ada untuk menghemat ruang
-        const publicUrl = await uploadProductImage(imageFile);
-        if (publicUrl) {
-          imageUrl = publicUrl;
+        if (updates.image_url) {
+          await deleteProductImage(updates.image_url);
         }
+        imageUrl = await uploadProductImage(imageFile);
       }
 
       const { data, error } = await supabase
@@ -111,9 +115,12 @@ export function useProducts() {
     }
   }
 
-  const deleteProduct = async (id: string) => {
+  const deleteProduct = async (id: string, imageUrl?: string) => {
     try {
-      // TODO: Hapus juga gambar dari Supabase Storage saat produk dihapus
+      if (imageUrl) {
+        await deleteProductImage(imageUrl)
+      }
+      
       const { error } = await supabase
         .from('products')
         .delete()
@@ -130,7 +137,7 @@ export function useProducts() {
 
   useEffect(() => {
     fetchProducts()
-  }, [])
+  }, [fetchProducts])
 
   return {
     products,

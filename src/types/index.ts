@@ -5,8 +5,8 @@ export interface Product {
   stock: number
   category: string
   barcode?: string
-  description?: string; // <-- TAMBAHKAN INI
-  image_url?: string;   // <-- TAMBAHKAN INI
+  description?: string
+  image_url?: string
   created_at: string
   updated_at: string
 }
@@ -18,18 +18,19 @@ export interface Order {
   total_amount: number
   payment_method?: string
   notes?: string
-  cashier_id?: string
+  user_id?: string
   created_at: string
   updated_at: string
   order_items?: OrderItem[]
+  user?: User
 }
 
 export interface OrderItem {
   id: string
   order_id: string
   product_id: string
+  // PERBAIKAN: Menggunakan `qty` agar konsisten dengan database
   qty: number
-  price: number
   notes?: string
   created_at: string
   product?: Product
@@ -42,9 +43,13 @@ export interface CartItem {
 }
 
 export interface User {
-  id: string
-  email: string
-  role: 'admin' | 'cashier'
+  id: string;
+  auth_id?: string;
+  name?: string;
+  email?: string;
+  phone_number?: string;
+  role: 'admin' | 'cashier' | 'guest';
+  created_at?: string;
 }
 
 export type PaymentMethod = 'cash' | 'qris' | 'card' | 'transfer'

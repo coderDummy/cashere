@@ -1,15 +1,13 @@
-// src/hooks/useOrders.ts
-
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
-import { Order } from '../types' // Pastikan OrderItem di-import
+import { Order } from '../types'
 
 export function useOrders() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       setLoading(true)
       const { data, error } = await supabase
@@ -25,22 +23,13 @@ export function useOrders() {
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      
-      const formattedData = data?.map(order => ({
-        ...order,
-        order_items: order.order_items.map((item: any) => ({
-          ...item,
-          quantity: item.qty // Buat properti `quantity` dari `qty`
-        }))
-      })) || []
-
-      setOrders(formattedData as Order[])
+      setOrders(data as Order[] || [])
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch orders')
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   const createOrder = async (orderData: {
     table_number?: string
@@ -53,25 +42,29 @@ export function useOrders() {
       product_id: string
       quantity: number
       notes?: string
-      // Kita tidak perlu mengirim harga dari UI
     }>
   }) => {
     try {
       const { data: { user: authUser } } = await supabase.auth.getUser()
-      let finalUserId: string | null = null;
+      let finalUserId: string | undefined;
 
       if (authUser) {
         let { data: userProfile } = await supabase.from('users').select('id').eq('auth_id', authUser.id).single();
-        if (!userProfile) {
-          const { data: newUserProfile } = await supabase.from('users').insert({ auth_id: authUser.id, role: 'admin', name: authUser.email }).select('id').single();
-          userProfile = newUserProfile;
-        }
-        finalUserId = userProfile?.id ?? null;
+        finalUserId = userProfile?.id;
       } else if (orderData.phoneNumber) {
-        const { data: guestUser, error: guestUserError } = await supabase.from('users').upsert({ phone_number: orderData.phoneNumber, name: orderData.name, role: 'guest' }, { onConflict: 'phone_number', ignoreDuplicates: false }).select('id').single();
+        const { data: guestUser, error: guestUserError } = await supabase
+          .from('users')
+          .upsert(
+            { phone_number: orderData.phoneNumber, name: orderData.name, role: 'guest' },
+            { onConflict: 'phone_number', ignoreDuplicates: false }
+          )
+          .select('id')
+          .single();
         if (guestUserError) throw guestUserError;
-        finalUserId = guestUser.id;
-      } else {
+        finalUserId = guestUser?.id;
+      }
+
+      if (!finalUserId) {
         throw new Error('User information is missing.');
       }
 
@@ -90,12 +83,11 @@ export function useOrders() {
 
       if (orderError) throw orderError
 
-      // PENERJEMAHAN DARI UI (quantity) -> KE DATABASE (qty)
-      // dan pastikan tidak mengirim `price`
+      // PERBAIKAN: Mengirim `qty` ke database, bukan `quantity`. Menghapus `price`.
       const orderItems = orderData.items.map(item => ({
         order_id: order.id,
         product_id: item.product_id,
-        qty: item.quantity, // Ubah 'quantity' UI menjadi 'qty' DB
+        qty: item.quantity,
         notes: item.notes
       }))
 
@@ -120,7 +112,7 @@ export function useOrders() {
         .single()
 
       if (error) throw error
-      setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o))
+      setOrders(prev => prev.map(o => o.id === id ? { ...data as Order, status: data.status } : o))
       return { data, error: null }
     } catch (err) {
       const error = err instanceof Error ? err.message : 'Failed to update order'
@@ -145,7 +137,7 @@ export function useOrders() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [fetchOrders])
 
   return {
     orders,

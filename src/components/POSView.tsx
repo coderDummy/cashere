@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { ShoppingCart, Scan, Plus, Minus, Trash2, CreditCard, ArrowLeft, Package } from 'lucide-react';
 import { useProducts } from '../hooks/useProducts';
 import { useOrders } from '../hooks/useOrders';
@@ -27,7 +27,11 @@ export function POSView() {
     }
   });
 
-  const categories = ['all', ...new Set(products.map(p => p.category))];
+  // OPTIMASI: Gunakan useMemo untuk mencegah kalkulasi ulang yang tidak perlu
+  const categories = useMemo(() => {
+    if (!products) return ['all'];
+    return ['all', ...new Set(products.map(p => p.category))];
+  }, [products]);
   
   const filteredProducts = products.filter(product => {
     const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
@@ -111,6 +115,8 @@ export function POSView() {
       items: cart.map(item => ({
         product_id: item.product.id,
         quantity: item.quantity,
+        // BEST PRACTICE: Menyimpan harga saat order dibuat untuk data historis
+        price: item.product.price,
         notes: item.notes,
       }))
     };
