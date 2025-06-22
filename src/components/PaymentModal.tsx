@@ -98,13 +98,13 @@ export function PaymentModal({ order, onClose }: PaymentModalProps) {
         </div>
 
         <div className="flex-shrink-0 p-4 border-t border-gray-200 mt-auto">
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-full bg-gray-900 text-white py-3 rounded-lg font-medium hover:bg-gray-800"
-            >
-              Done
-            </button>
+<button
+  type="button"
+  onClick={onClose} // <-- Tombol ini memanggil fungsi onClose saat diklik
+  className="w-full bg-gray-900 text-white py-3 rounded-lg font-medium hover:bg-gray-800"
+>
+  Done
+</button>
         </div>
       </div>
     </div>

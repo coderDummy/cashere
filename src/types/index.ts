@@ -5,8 +5,8 @@ export interface Product {
   stock: number
   category: string
   barcode?: string
-  description?: string; // <-- TAMBAHKAN INI
-  image_url?: string;   // <-- TAMBAHKAN INI
+  description?: string
+  image_url?: string
   created_at: string
   updated_at: string
 }
@@ -14,21 +14,22 @@ export interface Product {
 export interface Order {
   id: string
   table_number?: string
-  status: 'pending' | 'in_progress' | 'done' | 'cancelled'
+  status: 'pending' | 'paid' | 'in_progress' | 'done' | 'cancelled'
   total_amount: number
   payment_method?: string
   notes?: string
-  cashier_id?: string
+  user_id?: string
   created_at: string
   updated_at: string
   order_items?: OrderItem[]
+  user?: User // Relasi ke user untuk menampilkan nama/info
 }
 
 export interface OrderItem {
   id: string
   order_id: string
   product_id: string
-  qty: number
+  quantity: number
   price: number
   notes?: string
   created_at: string
@@ -41,10 +42,16 @@ export interface CartItem {
   notes?: string
 }
 
+// Peran (role) diperbarui di sini
+export type UserRole = 'admin' | 'cashier' | 'kitchen' | 'guest';
+
 export interface User {
   id: string
-  email: string
-  role: 'admin' | 'cashier'
+  role: UserRole
+  name?: string
+  phone_number?: string
+  auth_id?: string // Kolom yang terhubung ke Supabase Auth
+  created_at: string
 }
 
 export type PaymentMethod = 'cash' | 'qris' | 'card' | 'transfer'

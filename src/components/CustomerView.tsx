@@ -8,7 +8,7 @@ import { PaymentModal } from './PaymentModal';
 import { toast } from 'react-hot-toast';
 
 interface CustomerViewProps {
-  tableNumber: string;
+  tableNumber?: string;
 }
 
 interface GuestInfo {
@@ -21,7 +21,6 @@ export function CustomerView({ tableNumber: tableNumberFromUrl }: CustomerViewPr
   const { createOrder } = useOrders();
 
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [tableNumber, setTableNumber] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showCart, setShowCart] = useState(false);
@@ -33,13 +32,14 @@ export function CustomerView({ tableNumber: tableNumberFromUrl }: CustomerViewPr
   useEffect(() => {
     const storedGuestInfo = localStorage.getItem('dought_studio_guest_info');
     if (storedGuestInfo) {
-      setGuestInfo(JSON.parse(storedGuestInfo));
+      try {
+        setGuestInfo(JSON.parse(storedGuestInfo));
+      } catch (e) {
+        console.error("Failed to parse guest info from localStorage", e);
+        localStorage.removeItem('dought_studio_guest_info');
+      }
     }
-    
-    if (tableNumberFromUrl) {
-      setTableNumber(tableNumberFromUrl);
-    }
-  }, [tableNumberFromUrl]);
+  }, []);
 
   const categories = !loading && products ? ['all', ...new Set(products.map(p => p.category))] : ['all'];
   
@@ -109,7 +109,7 @@ export function CustomerView({ tableNumber: tableNumberFromUrl }: CustomerViewPr
     setGuestInfo({ name, phone: phoneNumber });
 
     const orderData = {
-      table_number: tableNumber,
+      table_number: tableNumberFromUrl,
       total_amount: cartTotal,
       name,
       phoneNumber,
@@ -139,6 +139,9 @@ export function CustomerView({ tableNumber: tableNumberFromUrl }: CustomerViewPr
     setShowPaymentModal(false);
     setCompletedOrder(null);
     toast.success('Thank you!');
+    if (!tableNumberFromUrl) { // Jika ini mode landing page (bukan dari QR)
+        window.location.reload(); // Refresh untuk kembali ke halaman pilihan
+    }
   }
 
   if (loading) {
@@ -260,12 +263,16 @@ export function CustomerView({ tableNumber: tableNumberFromUrl }: CustomerViewPr
               </button>
             </div>
             <div className="p-4 flex-1 overflow-y-auto">
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Table Number</label>
-                <div className="w-full px-3 py-3 bg-gray-100 border border-gray-200 rounded-lg text-base font-medium text-gray-800">
-                  {tableNumber}
+              {tableNumberFromUrl && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {tableNumberFromUrl === 'Pickup' ? 'Order Type' : 'Table Number'}
+                  </label>
+                  <div className="w-full px-3 py-3 bg-gray-100 border border-gray-200 rounded-lg text-base font-medium text-gray-800">
+                    {tableNumberFromUrl}
+                  </div>
                 </div>
-              </div>
+              )}
               {cart.length === 0 ? (
                 <div className="text-center text-gray-500 py-8">
                   <ShoppingCart className="w-12 h-12 mx-auto mb-3 text-gray-300" />
@@ -332,12 +339,12 @@ export function CustomerView({ tableNumber: tableNumberFromUrl }: CustomerViewPr
         />
       )}
       
-      {showPaymentModal && completedOrder && (
-        <PaymentModal
-          order={completedOrder}
-          onClose={handleClosePaymentModal}
-        />
-      )}
+{showPaymentModal && completedOrder && (
+  <PaymentModal
+    order={completedOrder}
+    onClose={handleClosePaymentModal} // <-- Anda memberikan fungsi ini ke modal
+  />
+)}
     </div>
   );
 }
