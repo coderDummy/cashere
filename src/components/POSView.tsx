@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { ShoppingCart, Scan, Plus, Minus, Trash2, CreditCard, ArrowLeft, Package } from 'lucide-react';
 import { useProducts } from '../hooks/useProducts';
 import { useOrders } from '../hooks/useOrders';
 import { useBarcode } from '../hooks/useBarcode';
-import { Product, CartItem, PaymentMethod } from '../types';
+import { Product, CartItem, PaymentMethod, CustomerMode } from '../types';
 import { BarcodeScanner } from './BarcodeScanner';
 import { CheckoutModal } from './CheckoutModal';
 import { toast } from 'react-hot-toast';
@@ -22,12 +22,16 @@ export function POSView() {
     const product = products.find(p => p.barcode === code);
     if (product) {
       addToCart(product);
+      toast.success(`${product.name} added to cart!`);
     } else {
       toast.error('Product not found for barcode: ' + code);
     }
   });
 
-  const categories = ['all', ...new Set(products.map(p => p.category))];
+  const categories = useMemo(() => {
+    if (!products) return ['all'];
+    return ['all', ...new Set(products.map(p => p.category))];
+  }, [products]);
   
   const filteredProducts = products.filter(product => {
     const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
@@ -97,16 +101,22 @@ export function POSView() {
     setCart(prev => prev.filter(item => item.product.id !== productId));
   };
 
-  const handleCheckout = async (paymentMethod: PaymentMethod, tableNumber?: string, notes?: string) => {
+  const handleCheckout = async (
+    paymentMethod: PaymentMethod,
+    mode: CustomerMode,
+    tableNumber?: string,
+    notes?: string
+  ) => {
     if (cart.length === 0) {
       toast.error("Cart is empty!"); 
       return;
     }
 
     const orderData = {
-      table_number: tableNumber,
+      table_number: mode === 'dine-in' ? tableNumber : undefined,
       total_amount: cartTotal,
       payment_method: paymentMethod,
+      customer_mode: mode,
       notes,
       items: cart.map(item => ({
         product_id: item.product.id,
@@ -147,8 +157,8 @@ export function POSView() {
   }
 
   return (
-    <div className="h-screen flex flex-col lg:flex-row bg-gray-50 overflow-hidden">
-      {/* Products Section */}
+    // PERBAIKAN: Menghapus kelas `overflow-hidden` dari div utama ini
+    <div className="h-screen flex flex-col lg:flex-row bg-gray-50">
       <div className="flex-1 flex flex-col">
         <div className="bg-white p-4 border-b border-gray-200">
           <div className="flex items-center justify-between mb-4">
@@ -228,10 +238,14 @@ export function POSView() {
                         onClick={() => addToCart(product)}
                         className="bg-white p-3 lg:p-4 rounded-lg border border-gray-200 hover:border-gray-400 hover:shadow-lg transition-all cursor-pointer"
                     >
-                        <div className="aspect-square bg-gray-100 rounded-md mb-2 lg:mb-3 flex items-center justify-center">
-                        <span className="text-xl lg:text-2xl font-bold text-gray-400">
-                            {product.name.charAt(0)}
-                        </span>
+                        <div className="aspect-square bg-gray-100 rounded-md mb-2 lg:mb-3 flex items-center justify-center overflow-hidden">
+                          {product.image_url ? (
+                            <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-xl lg:text-2xl font-bold text-gray-400">
+                                {product.name.charAt(0)}
+                            </span>
+                          )}
                         </div>
                         <h3 className="font-medium text-gray-900 text-sm mb-1 line-clamp-2">
                         {product.name}
@@ -249,7 +263,6 @@ export function POSView() {
         </div>
       </div>
 
-      {/* Desktop Cart Section */}
       <div className="hidden lg:flex w-96 bg-white border-l border-gray-200 flex-col relative">
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center gap-2">
@@ -327,7 +340,6 @@ export function POSView() {
         )}
       </div>
 
-      {/* Mobile Cart Modal */}
       {showMobileCart && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end z-50 lg:hidden">
           <div className="bg-white rounded-t-lg w-full max-h-[80vh] flex flex-col">
@@ -406,7 +418,6 @@ export function POSView() {
         </div>
       )}
 
-      {/* Checkout Modal */}
       {showCheckout && (
         <CheckoutModal
           cart={cart}

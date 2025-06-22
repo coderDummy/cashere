@@ -33,25 +33,26 @@ export function ProductsView() {
 
   const handleDeleteProduct = async (product: Product) => {
     if (confirm(`Are you sure you want to delete "${product.name}"?`)) {
-      await deleteProduct(product.id)
+      // PERUBAHAN: Mengirimkan `product.image_url` ke fungsi `deleteProduct`
+      await deleteProduct(product.id, product.image_url)
     }
   }
 
-const handleSaveProduct = async (
-  productData: Omit<Product, 'id' | 'created_at' | 'updated_at'>,
-  imageFile?: File | null
-) => {
-  let result;
-  if (editingProduct) {
-    result = await updateProduct(editingProduct.id, productData, imageFile);
-  } else {
-    result = await addProduct(productData, imageFile);
-  }
-  if (!result.error) {
-    setShowModal(false);
-  }
-  return result; // <-- TAMBAHKAN BARIS INI untuk mengembalikan hasil
-};
+  const handleSaveProduct = async (
+    productData: Omit<Product, 'id' | 'created_at' | 'updated_at'>,
+    imageFile?: File | null
+  ) => {
+    let result;
+    if (editingProduct) {
+      result = await updateProduct(editingProduct.id, productData, imageFile);
+    } else {
+      result = await addProduct(productData, imageFile);
+    }
+    if (!result.error) {
+      setShowModal(false);
+    }
+    return result;
+  };
 
   return (
     <div className="space-y-4 lg:space-y-6">

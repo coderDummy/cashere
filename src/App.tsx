@@ -1,85 +1,79 @@
-import { useState, useEffect } from 'react'
-import { useAuth } from './hooks/useAuth'
-import { Layout } from './components/Layout'
-import { LoginForm } from './components/LoginForm'
-import { POSView } from './components/POSView'
-import { OrdersView } from './components/OrdersView'
-import { ProductsView } from './components/ProductsView'
-import { DashboardView } from './components/DashboardView'
-import { CustomerView } from './components/CustomerView'
-import { Toaster } from 'react-hot-toast'
+import { useState, useEffect } from 'react';
+import { useAuth } from './hooks/useAuth';
+import { useCustomerSession } from './hooks/useCustomerSession';
+import { Layout } from './components/Layout';
+import { LoginForm } from './components/LoginForm';
+import { POSView } from './components/POSView';
+import { OrdersView } from './components/OrdersView';
+import { ProductsView } from './components/ProductsView';
+import { DashboardView } from './components/DashboardView';
+import { CustomerView } from './components/CustomerView';
+import { ModeSelectionView } from './components/ModeSelectionView';
+import { Toaster } from 'react-hot-toast';
 
 function App() {
-  const { user, loading } = useAuth()
-  const [currentView, setCurrentView] = useState('pos')
-  
-  const [guestTableNumber, setGuestTableNumber] = useState<string | null>(null)
+  const { user, loading: authLoading } = useAuth();
+  const { session: customerSession, isSessionActive } = useCustomerSession();
+  const [currentView, setCurrentView] = useState('pos');
+  const [tableNumberFromUrl, setTableNumberFromUrl] = useState<string | null>(null);
+  const [activeComponent, setActiveComponent] = useState<'loading' | 'admin' | 'customer' | 'selection' | 'login'>('loading');
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    // UBAH DI SINI: dari 'table_number' menjadi 't'
-    const tableNumFromUrl = params.get('t');
+    const tableParam = params.get('t');
+    if (tableParam) {
+      setTableNumberFromUrl(tableParam);
+      setActiveComponent('customer');
+      return; 
+    }
 
-    if (tableNumFromUrl) {
-      localStorage.setItem('dought_studio_table_number', tableNumFromUrl);
-      setGuestTableNumber(tableNumFromUrl);
+    if (user) {
+      setActiveComponent('admin');
+    } else if (window.location.pathname === '/login') {
+      setActiveComponent('login');
+    } else if (isSessionActive) {
+      setActiveComponent('customer');
     } else {
-      const tableNumFromStorage = localStorage.getItem('dought_studio_table_number');
-      if (tableNumFromStorage) {
-        setGuestTableNumber(tableNumFromStorage);
-      }
+      setActiveComponent('selection');
     }
-  }, []);
+  }, [user, isSessionActive]);
 
-  if (loading && !guestTableNumber) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-      </div>
-    )
-  }
+  const renderContent = () => {
+    if (authLoading || activeComponent === 'loading') {
+      return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div></div>;
+    }
 
-  if (guestTableNumber) {
-    return (
-      <>
-        <Toaster position="top-center" reverseOrder={false} />
-        <CustomerView tableNumber={guestTableNumber} />
-      </>
-    )
-  }
+    switch (activeComponent) {
+      case 'admin':
+        let viewComponent;
+        switch (currentView) {
+          case 'orders': viewComponent = <OrdersView />; break;
+          case 'products': viewComponent = <ProductsView />; break;
+          case 'dashboard': viewComponent = <DashboardView />; break;
+          case 'pos': default: viewComponent = <POSView />; break;
+        }
+        return <Layout currentView={currentView} onViewChange={setCurrentView}>{viewComponent}</Layout>;
+      
+      case 'login':
+        return <LoginForm />;
 
-  if (!user) {
-    return (
-      <>
-        <Toaster position="top-center" />
-        <LoginForm />
-      </>
-    )
-  }
+      case 'customer':
+        const tableForCustomer = tableNumberFromUrl || customerSession?.tableNumber || null;
+        return <CustomerView tableNumberFromUrl={tableForCustomer} />;
 
-  const renderCurrentView = () => {
-    switch (currentView) {
-      case 'pos':
-        return <POSView />
-      case 'orders':
-        return <OrdersView />
-      case 'products':
-        return <ProductsView />
-      case 'dashboard':
-        return <DashboardView />
+      case 'selection':
       default:
-        return <POSView />
+        return <ModeSelectionView />;
     }
-  }
+  };
 
   return (
     <>
-      <Toaster position="top-center" reverseOrder={false} />
-      <Layout currentView={currentView} onViewChange={setCurrentView}>
-        {renderCurrentView()}
-      </Layout>
+      {/* PERBAIKAN: Meletakkan Toaster di sini agar aktif di semua halaman */}
+      <Toaster position="top-center" />
+      {renderContent()}
     </>
-  )
+  );
 }
 
-export default App
+export default App;

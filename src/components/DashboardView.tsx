@@ -1,85 +1,11 @@
-import { useState, useEffect } from 'react'
-import { DollarSign, ShoppingBag, TrendingUp, AlertTriangle } from 'lucide-react'
-import { supabase } from '../lib/supabase'
-import { DashboardStats } from '../types'
+// src/components/DashboardView.tsx
 
-interface PopularOrderItemQueryResult {
-  quantity: number
-  product: {
-    name: string
-  } | null
-}
+import { DollarSign, ShoppingBag, TrendingUp, AlertTriangle } from 'lucide-react'
+import { useDashboardStats } from '../hooks/useDashboardStats'
 
 export function DashboardView() {
-  const [stats, setStats] = useState<DashboardStats>({
-    todayRevenue: 0,
-    todayOrders: 0,
-    popularItems: [],
-    lowStockItems: []
-  })
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetchDashboardStats()
-  }, [])
-
-  const fetchDashboardStats = async () => {
-    try {
-      setLoading(true)
-      const today = new Date().toISOString().split('T')[0]
-
-      // Today's revenue and orders
-      const { data: todayOrders } = await supabase
-        .from('orders')
-        .select('total_amount')
-        .gte('created_at', today)
-        .eq('status', 'done')
-
-      const todayRevenue = todayOrders?.reduce((sum, order) => sum + order.total_amount, 0) || 0
-      const todayOrdersCount = todayOrders?.length || 0
-
-      // Popular items (last 7 days)
-      const sevenDaysAgo = new Date()
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-
-      const { data: popularItems } = await supabase
-        .from('order_items')
-        .select(`
-          quantity,
-          product:products(name)
-        `)
-        .gte('created_at', sevenDaysAgo.toISOString()) as { data: PopularOrderItemQueryResult[] | null }
-
-      const itemCounts = popularItems?.reduce((acc, item) => {
-        const name = item.product?.name || 'Unknown'
-        acc[name] = (acc[name] || 0) + item.quantity
-        return acc
-      }, {} as Record<string, number>) || {}
-
-      const popularItemsArray = Object.entries(itemCounts)
-        .map(([product_name, total_quantity]) => ({ product_name, total_quantity }))
-        .sort((a, b) => b.total_quantity - a.total_quantity)
-        .slice(0, 5)
-
-      // Low stock items
-      const { data: lowStockItems } = await supabase
-        .from('products')
-        .select('*')
-        .lte('stock', 10)
-        .order('stock')
-
-      setStats({
-        todayRevenue,
-        todayOrders: todayOrdersCount,
-        popularItems: popularItemsArray,
-        lowStockItems: lowStockItems || []
-      })
-    } catch (error) {
-      console.error('Error fetching dashboard stats:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  // ARSITEKTUR: Menggunakan hook yang sudah direfaktor, membuat komponen ini bersih
+  const { stats, loading, error } = useDashboardStats()
 
   if (loading) {
     return (
@@ -87,6 +13,16 @@ export function DashboardView() {
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
       </div>
     )
+  }
+
+  if (error) {
+      return (
+          <div className="flex flex-col items-center justify-center h-64 bg-red-50 text-red-700 p-4 rounded-lg">
+            <AlertTriangle className="w-12 h-12 mb-4" />
+            <p className="font-semibold">Failed to load dashboard data</p>
+            <p className="text-sm">{error}</p>
+          </div>
+      )
   }
 
   return (
@@ -103,8 +39,6 @@ export function DashboardView() {
             <div className="ml-3 lg:ml-4">
               <p className="text-xs lg:text-sm font-medium text-gray-600">Today's Revenue</p>
               <p className="text-lg lg:text-2xl font-bold text-gray-900"> Rp {new Intl.NumberFormat('id-ID').format(stats.todayRevenue)}</p>
-                          
-
             </div>
           </div>
         </div>
@@ -154,14 +88,9 @@ export function DashboardView() {
             <p className="text-gray-500">No data available</p>
           ) : (
             <div className="space-y-3">
-              {stats.popularItems.map((item, index) => (
+              {stats.popularItems.map((item) => (
                 <div key={item.product_name} className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <span className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-xs font-medium text-gray-600 mr-3">
-                      {index + 1}
-                    </span>
-                    <span className="font-medium text-gray-900 text-sm lg:text-base">{item.product_name}</span>
-                  </div>
+                  <span className="font-medium text-gray-900 text-sm lg:text-base">{item.product_name}</span>
                   <span className="text-sm text-gray-600">{item.total_quantity} sold</span>
                 </div>
               ))}

@@ -1,78 +1,74 @@
-// src/hooks/useOrders.ts
-
-import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
-import { Order } from '../types' // Pastikan OrderItem di-import
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '../lib/supabase';
+import { Order, CustomerMode } from '../types';
 
 export function useOrders() {
-  const [orders, setOrders] = useState<Order[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const { data, error } = await supabase
         .from('orders')
         .select(`
           *,
-          user:users (*),
+          users (*),
           order_items (
             *,
             product:products (*)
           )
         `)
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending: false });
 
-      if (error) throw error
+      if (error) throw error;
       
-      const formattedData = data?.map(order => ({
-        ...order,
-        order_items: order.order_items.map((item: any) => ({
-          ...item,
-          quantity: item.qty // Buat properti `quantity` dari `qty`
-        }))
-      })) || []
-
-      setOrders(formattedData as Order[])
+      setOrders(data as Order[] || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch orders')
+      setError(err instanceof Error ? err.message : 'Failed to fetch orders');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  }, []);
 
   const createOrder = async (orderData: {
-    table_number?: string
-    total_amount: number
-    payment_method?: string
-    notes?: string
-    name?: string
-    phoneNumber?: string
+    table_number?: string;
+    total_amount: number;
+    payment_method?: string;
+    notes?: string;
+    name?: string;
+    phoneNumber?: string;
+    customer_mode?: CustomerMode;
     items: Array<{
-      product_id: string
-      quantity: number
-      notes?: string
-      // Kita tidak perlu mengirim harga dari UI
-    }>
+      product_id: string;
+      quantity: number;
+      notes?: string;
+    }>;
   }) => {
     try {
-      const { data: { user: authUser } } = await supabase.auth.getUser()
-      let finalUserId: string | null = null;
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      let finalUserId: string | undefined;
 
-      if (authUser) {
-        let { data: userProfile } = await supabase.from('users').select('id').eq('auth_id', authUser.id).single();
-        if (!userProfile) {
-          const { data: newUserProfile } = await supabase.from('users').insert({ auth_id: authUser.id, role: 'admin', name: authUser.email }).select('id').single();
-          userProfile = newUserProfile;
-        }
-        finalUserId = userProfile?.id ?? null;
-      } else if (orderData.phoneNumber) {
-        const { data: guestUser, error: guestUserError } = await supabase.from('users').upsert({ phone_number: orderData.phoneNumber, name: orderData.name, role: 'guest' }, { onConflict: 'phone_number', ignoreDuplicates: false }).select('id').single();
+      if (orderData.phoneNumber) {
+        const { data: guestUser, error: guestUserError } = await supabase
+          .from('users')
+          .upsert(
+            { phone_number: orderData.phoneNumber, name: orderData.name, role: 'guest' },
+            { onConflict: 'phone_number', ignoreDuplicates: false }
+          )
+          .select('id')
+          .single();
         if (guestUserError) throw guestUserError;
-        finalUserId = guestUser.id;
-      } else {
-        throw new Error('User information is missing.');
+        finalUserId = guestUser?.id;
+      } else if (authUser) {
+         let { data: cashierProfile } = await supabase.from('users').select('id').eq('auth_id', authUser.id).single();
+         if (!cashierProfile) throw new Error('Cashier profile not found.');
+         finalUserId = cashierProfile.id;
+      }
+
+      if (!finalUserId) {
+        throw new Error('User information is missing for this order.');
       }
 
       const { data: order, error: orderError } = await supabase
@@ -81,34 +77,33 @@ export function useOrders() {
           table_number: orderData.table_number,
           total_amount: orderData.total_amount,
           payment_method: orderData.payment_method,
+          customer_mode: orderData.customer_mode,
           notes: orderData.notes,
           status: 'pending',
           user_id: finalUserId
         }])
         .select()
-        .single()
+        .single();
 
-      if (orderError) throw orderError
+      if (orderError) throw orderError;
 
-      // PENERJEMAHAN DARI UI (quantity) -> KE DATABASE (qty)
-      // dan pastikan tidak mengirim `price`
       const orderItems = orderData.items.map(item => ({
         order_id: order.id,
         product_id: item.product_id,
-        qty: item.quantity, // Ubah 'quantity' UI menjadi 'qty' DB
+        qty: item.quantity,
         notes: item.notes
-      }))
+      }));
 
-      const { error: itemsError } = await supabase.from('order_items').insert(orderItems)
-      if (itemsError) throw itemsError
+      const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
+      if (itemsError) throw itemsError;
 
-      await fetchOrders()
-      return { data: order, error: null }
+      await fetchOrders();
+      return { data: order, error: null };
     } catch (err) {
-      const error = err instanceof Error ? err.message : 'Failed to create order'
-      return { data: null, error }
+      const error = err instanceof Error ? err.message : 'Failed to create order';
+      return { data: null, error };
     }
-  }
+  };
 
   const updateOrderStatus = async (id: string, status: Order['status']) => {
     try {
@@ -117,19 +112,19 @@ export function useOrders() {
         .update({ status, updated_at: new Date().toISOString() })
         .eq('id', id)
         .select()
-        .single()
+        .single();
 
-      if (error) throw error
-      setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o))
-      return { data, error: null }
+      if (error) throw error;
+      setOrders(prev => prev.map(o => o.id === id ? { ...data as Order, status: data.status } : o));
+      return { data, error: null };
     } catch (err) {
-      const error = err instanceof Error ? err.message : 'Failed to update order'
-      return { data: null, error }
+      const error = err instanceof Error ? err.message : 'Failed to update order';
+      return { data: null, error };
     }
-  }
+  };
 
   useEffect(() => {
-    fetchOrders()
+    fetchOrders();
     const channel = supabase
       .channel('realtime-orders')
       .on('postgres_changes', 
@@ -140,12 +135,12 @@ export function useOrders() {
         { event: '*', schema: 'public', table: 'order_items'},
         () => fetchOrders()
       )
-      .subscribe()
+      .subscribe();
 
     return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [])
+      supabase.removeChannel(channel);
+    };
+  }, [fetchOrders]);
 
   return {
     orders,
@@ -154,5 +149,5 @@ export function useOrders() {
     createOrder,
     updateOrderStatus,
     refetch: fetchOrders,
-  }
+  };
 }
