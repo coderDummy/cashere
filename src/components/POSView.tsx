@@ -67,13 +67,11 @@ export function POSView() {
       removeFromCart(productId);
       return;
     }
-
     const product = products.find(p => p.id === productId);
     if (product && quantity > product.stock) {
       toast.error('Insufficient stock');
       return;
     }
-
     setCart(prev =>
       prev.map(item =>
         item.product.id === productId
@@ -147,7 +145,7 @@ export function POSView() {
   }
 
   return (
-    <div className="h-screen flex flex-col lg:flex-row bg-gray-50 overflow-hidden">
+    <div className="h-screen flex flex-col lg:flex-row bg-gray-50">
       {/* Products Section */}
       <div className="flex-1 flex flex-col">
         <div className="bg-white p-4 border-b border-gray-200">
@@ -214,38 +212,38 @@ export function POSView() {
           </div>
         )}
         <div className="flex-1 p-4 overflow-y-auto">
-           {filteredProducts.length === 0 ? (
+          {filteredProducts.length === 0 ? (
             <div className="text-center py-16 text-gray-500">
-                <Package className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                <p className="text-lg font-medium">No Products Found</p>
-                <p className="text-sm">There are no products that match your search or filter.</p>
+              <Package className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+              <p className="text-lg font-medium">No Products Found</p>
+              <p className="text-sm">There are no products that match your search or filter.</p>
             </div>
-            ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 lg:gap-4">
-                    {filteredProducts.map(product => (
-                    <div
-                        key={product.id}
-                        onClick={() => addToCart(product)}
-                        className="bg-white p-3 lg:p-4 rounded-lg border border-gray-200 hover:border-gray-400 hover:shadow-lg transition-all cursor-pointer"
-                    >
-                        <div className="aspect-square bg-gray-100 rounded-md mb-2 lg:mb-3 flex items-center justify-center">
-                        <span className="text-xl lg:text-2xl font-bold text-gray-400">
-                            {product.name.charAt(0)}
-                        </span>
-                        </div>
-                        <h3 className="font-medium text-gray-900 text-sm mb-1 line-clamp-2">
-                        {product.name}
-                        </h3>
-                        <p className="text-lg font-bold text-gray-900 mb-1">
-                        Rp {new Intl.NumberFormat('id-ID').format(product.price)}
-                        </p>
-                        <p className={`text-xs ${product.stock > 10 ? 'text-gray-500' : 'text-red-600 font-medium'}`}>
-                        Stock: {product.stock}
-                        </p>
-                    </div>
-                    ))}
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 lg:gap-4">
+              {filteredProducts.map(product => (
+                <div
+                  key={product.id}
+                  onClick={() => addToCart(product)}
+                  className="bg-white p-3 lg:p-4 rounded-lg border border-gray-200 hover:border-gray-400 hover:shadow-lg transition-all cursor-pointer"
+                >
+                  <div className="aspect-square bg-gray-100 rounded-md mb-2 lg:mb-3 flex items-center justify-center overflow-hidden">
+                    {product.image_url ? (
+                      <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-xl lg:text-2xl font-bold text-gray-400">{product.name.charAt(0)}</span>
+                    )}
+                  </div>
+                  <h3 className="font-medium text-gray-900 text-sm mb-1 line-clamp-2">{product.name}</h3>
+                  <p className="text-lg font-bold text-gray-900 mb-1">
+                    Rp {new Intl.NumberFormat('id-ID').format(product.price)}
+                  </p>
+                  <p className={`text-xs ${product.stock > 10 ? 'text-gray-500' : 'text-red-600 font-medium'}`}>
+                    Stock: {product.stock}
+                  </p>
                 </div>
-            )}
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

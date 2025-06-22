@@ -26,7 +26,7 @@ export function PaymentModal({ order, onClose }: PaymentModalProps) {
           <div className="text-center p-4 bg-gray-50 rounded-lg animate-fade-in">
             <h4 className="font-medium text-gray-800">Scan to Pay</h4>
             <p className="text-xs text-gray-500 mb-3">Powered by DANA</p>
-            <img src={qrisImage} alt="QRIS Payment Code" className="w-64 h-64 mx-auto rounded-md shadow-md" />
+            <img src={qrisImage} alt="QRIS Payment Code" className="w-60 h-60 mx-auto rounded-md shadow-md" />
             <div className="mt-4 text-sm bg-blue-50 text-blue-800 p-3 rounded-lg">
               <p className="font-semibold">Total: Rp {order.total_amount.toLocaleString('id-ID')}</p>
               <p>Order ID: #{order.id.slice(-6).toUpperCase()}</p>
@@ -52,15 +52,15 @@ export function PaymentModal({ order, onClose }: PaymentModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 animate-fade-in">
-      <div className="bg-white rounded-xl max-w-md w-full shadow-lg">
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+      <div className="bg-white rounded-xl max-w-md w-full shadow-lg flex flex-col max-h-[90vh]">
+        <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900">Complete Your Payment</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-4 overflow-y-auto">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
@@ -82,7 +82,6 @@ export function PaymentModal({ order, onClose }: PaymentModalProps) {
                   </button>
                 );
               })}
-              {/* Tombol Transfer Disabled */}
               <button
                 disabled
                 className="flex flex-col items-center justify-center gap-2 p-3 rounded-lg border-2 border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed"
@@ -98,7 +97,7 @@ export function PaymentModal({ order, onClose }: PaymentModalProps) {
           </div>
         </div>
 
-        <div className="p-4 border-t border-gray-200">
+        <div className="flex-shrink-0 p-4 border-t border-gray-200 mt-auto">
             <button
               type="button"
               onClick={onClose}
