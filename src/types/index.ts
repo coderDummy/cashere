@@ -13,19 +13,22 @@ export interface Product {
 
 export type CustomerMode = 'dine-in' | 'take-away';
 
+// PERUBAHAN: Menambahkan status 'ready_to_serve'
+export type OrderStatus = 'waiting_payment' | 'paid' | 'in_progress' | 'ready_to_serve' | 'done' | 'cancelled';
+
 export interface Order {
   id: string;
   table_number?: string;
-  status: 'pending' | 'in_progress' | 'done' | 'cancelled';
+  status: OrderStatus;
   total_amount: number;
   payment_method?: string;
-  customer_mode?: CustomerMode; // Kolom baru
+  customer_mode?: CustomerMode;
   notes?: string;
   user_id?: string;
   created_at: string;
   updated_at: string;
   order_items?: OrderItem[];
-  users?: User; // <- Perbaikan dari 'user' menjadi 'users'
+  users?: User;
 }
 
 export interface OrderItem {
