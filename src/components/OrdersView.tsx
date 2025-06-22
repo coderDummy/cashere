@@ -1,9 +1,17 @@
 import { useState } from 'react';
-// PERUBAHAN: Menambahkan ikon Bell
 import { Clock, CheckCircle, XCircle, Play, Package, Filter, User, Utensils, ShoppingBag, Wallet, Check, Bell } from 'lucide-react';
 import { useOrders } from '../hooks/useOrders';
 import { Order, OrderStatus } from '../types';
 import { CornerDownRight } from 'lucide-react';
+
+// ===================== FUNGSI BARU DI SINI =====================
+const getStatusText = (order: Order): string => {
+  if (order.status === 'ready_to_serve') {
+    return order.customer_mode === 'dine-in' ? 'Ready to Serve' : 'Ready to Pickup';
+  }
+  return order.status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+};
+// =============================================================
 
 export function OrdersView() {
   const { orders, updateOrderStatus, loading } = useOrders();
@@ -18,7 +26,7 @@ export function OrdersView() {
       case 'waiting_payment': return <Wallet className="w-4 h-4 text-orange-500" />;
       case 'paid': return <Check className="w-4 h-4 text-cyan-500" />;
       case 'in_progress': return <Play className="w-4 h-4 text-blue-500" />;
-      case 'ready_to_serve': return <Bell className="w-4 h-4 text-purple-500" />; // Status baru
+      case 'ready_to_serve': return <Bell className="w-4 h-4 text-purple-500" />;
       case 'done': return <CheckCircle className="w-4 h-4 text-green-500" />;
       case 'cancelled': return <XCircle className="w-4 h-4 text-red-500" />;
     }
@@ -29,7 +37,7 @@ export function OrdersView() {
       case 'waiting_payment': return 'bg-orange-100 text-orange-800';
       case 'paid': return 'bg-cyan-100 text-cyan-800';
       case 'in_progress': return 'bg-blue-100 text-blue-800';
-      case 'ready_to_serve': return 'bg-purple-100 text-purple-800'; // Status baru
+      case 'ready_to_serve': return 'bg-purple-100 text-purple-800';
       case 'done': return 'bg-green-100 text-green-800';
       case 'cancelled': return 'bg-red-100 text-red-800';
     }
@@ -44,7 +52,7 @@ export function OrdersView() {
     { value: 'waiting_payment', label: 'Waiting Payment' },
     { value: 'paid', label: 'Paid' },
     { value: 'in_progress', label: 'In Progress' },
-    { value: 'ready_to_serve', label: 'Ready to Serve' }, // Status baru
+    { value: 'ready_to_serve', label: 'Ready to Serve' },
     { value: 'done', label: 'Done' },
     { value: 'cancelled', label: 'Cancelled' }
   ];
@@ -84,7 +92,11 @@ export function OrdersView() {
                   <p className="text-sm text-gray-500">{new Date(order.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}</p>
                 </div>
                 <div className="flex items-center justify-between w-full sm:w-auto sm:flex-col sm:items-end gap-3">
-                  <span className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium capitalize ${getStatusColor(order.status)}`}>{getStatusIcon(order.status)}{order.status.replace(/_/g, ' ')}</span>
+                   {/* PERUBAHAN DI SINI: Menggunakan getStatusText */}
+                  <span className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium capitalize ${getStatusColor(order.status)}`}>
+                    {getStatusIcon(order.status)}
+                    {getStatusText(order)}
+                  </span>
                   <span className="font-bold text-lg text-gray-900">Rp {new Intl.NumberFormat('id-ID').format(order.total_amount)}</span>
                 </div>
               </div>
@@ -99,25 +111,10 @@ export function OrdersView() {
               {order.notes && (<div className="mb-4"><h4 className="font-medium text-gray-900 text-sm mb-1">Notes:</h4><p className="text-sm text-gray-600 bg-gray-50 p-2 rounded-md">{order.notes}</p></div>)}
               
               <div className="flex flex-wrap gap-2">
-                {order.status === 'waiting_payment' && (
-                  <>
-                    <button onClick={() => handleStatusChange(order.id, 'paid')} className="px-3 py-1.5 bg-cyan-100 text-cyan-700 rounded-md text-sm font-medium hover:bg-cyan-200 transition-colors">Confirm Payment</button>
-                    <button onClick={() => handleStatusChange(order.id, 'cancelled')} className="px-3 py-1.5 bg-red-100 text-red-700 rounded-md text-sm font-medium hover:bg-red-200">Cancel</button>
-                  </>
-                )}
-                {order.status === 'paid' && (
-                  <>
-                    <button onClick={() => handleStatusChange(order.id, 'in_progress')} className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-md text-sm font-medium hover:bg-blue-200">Start Preparing</button>
-                    <button onClick={() => handleStatusChange(order.id, 'cancelled')} className="px-3 py-1.5 bg-red-100 text-red-700 rounded-md text-sm font-medium hover:bg-red-200">Cancel</button>
-                  </>
-                )}
-                {/* PERUBAHAN: Memperbarui alur tombol */}
-                {order.status === 'in_progress' && (
-                  <button onClick={() => handleStatusChange(order.id, 'ready_to_serve')} className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-md text-sm font-medium hover:bg-purple-200">Mark as Ready</button>
-                )}
-                {order.status === 'ready_to_serve' && (
-                  <button onClick={() => handleStatusChange(order.id, 'done')} className="px-3 py-1.5 bg-green-100 text-green-700 rounded-md text-sm font-medium hover:bg-green-200">Complete Order</button>
-                )}
+                {order.status === 'waiting_payment' && (<><button onClick={() => handleStatusChange(order.id, 'paid')} className="px-3 py-1.5 bg-cyan-100 text-cyan-700 rounded-md text-sm font-medium hover:bg-cyan-200 transition-colors">Confirm Payment</button><button onClick={() => handleStatusChange(order.id, 'cancelled')} className="px-3 py-1.5 bg-red-100 text-red-700 rounded-md text-sm font-medium hover:bg-red-200">Cancel</button></>)}
+                {order.status === 'paid' && (<><button onClick={() => handleStatusChange(order.id, 'in_progress')} className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-md text-sm font-medium hover:bg-blue-200">Start Preparing</button><button onClick={() => handleStatusChange(order.id, 'cancelled')} className="px-3 py-1.5 bg-red-100 text-red-700 rounded-md text-sm font-medium hover:bg-red-200">Cancel</button></>)}
+                {order.status === 'in_progress' && (<button onClick={() => handleStatusChange(order.id, 'ready_to_serve')} className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-md text-sm font-medium hover:bg-purple-200">Mark as Ready</button>)}
+                {order.status === 'ready_to_serve' && (<button onClick={() => handleStatusChange(order.id, 'done')} className="px-3 py-1.5 bg-green-100 text-green-700 rounded-md text-sm font-medium hover:bg-green-200">Complete Order</button>)}
               </div>
             </div>
           ))

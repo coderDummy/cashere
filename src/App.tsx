@@ -69,7 +69,6 @@ function App() {
 
   return (
     <>
-      {/* PERBAIKAN: Meletakkan Toaster di sini agar aktif di semua halaman */}
       <Toaster position="top-center" />
       {renderContent()}
     </>

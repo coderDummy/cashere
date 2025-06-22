@@ -46,15 +46,15 @@ export function ModeSelectionView() {
         throw new Error(error.message);
       }
       
-      if (data) { // Pengguna sudah ada
+      if (data) {
         setName(data.name);
         if (mode === 'dine-in') {
           setStep('table');
-        } else { // 'take-away'
+        } else {
           updateSession({ name: data.name, phone, mode, tableNumber: null });
-          window.location.reload(); // PERBAIKAN: Paksa reload halaman
+          window.location.reload();
         }
-      } else { // Pengguna baru
+      } else {
         setStep('name');
       }
     } catch (error: any) {
@@ -71,9 +71,9 @@ export function ModeSelectionView() {
     }
     if (mode === 'dine-in') {
       setStep('table');
-    } else { // 'take-away'
+    } else {
       updateSession({ name, phone, mode, tableNumber: null });
-      window.location.reload(); // PERBAIKAN: Paksa reload halaman
+      window.location.reload();
     }
   };
   
@@ -85,14 +85,13 @@ export function ModeSelectionView() {
     }
     sessionStorage.setItem('dought_studio_table_number', tableNumber);
     updateSession({ name, phone, mode, tableNumber });
-    window.location.reload(); // PERBAIKAN: Paksa reload halaman
+    window.location.reload();
   };
 
   const renderStep = () => {
     switch (step) {
       case 'loading':
         return <div className="p-8 h-48 flex justify-center items-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div></div>;
-      
       case 'phone':
         return (
           <form onSubmit={handlePhoneSubmit} className="space-y-4">
@@ -104,7 +103,6 @@ export function ModeSelectionView() {
             <button type="submit" className="w-full bg-gray-900 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2">Continue <ArrowRight className="w-4 h-4" /></button>
           </form>
         );
-      
       case 'name':
         return (
           <form onSubmit={handleNameSubmit} className="space-y-4 animate-fade-in">
@@ -119,7 +117,6 @@ export function ModeSelectionView() {
             </button>
           </form>
         );
-
       case 'table':
         return (
           <form onSubmit={handleTableSubmit} className="space-y-4 animate-fade-in">
@@ -131,7 +128,6 @@ export function ModeSelectionView() {
              <button type="submit" className="w-full bg-gray-900 text-white py-3 rounded-lg font-medium">Start Ordering</button>
           </form>
         );
-
       case 'mode':
       default:
         return (
@@ -158,7 +154,7 @@ export function ModeSelectionView() {
       <div className="max-w-sm w-full bg-white p-6 rounded-xl shadow-md">
         {renderStep()}
       </div>
-       <a href="/login" className="mt-6 flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
+      <a href="/login" className="mt-6 flex items-center justify-center gap-2 text-sm text-gray-600 hover:text-gray-900">
         <LogIn className="w-4 h-4" /> Are you staff? Login here.
       </a>
     </div>
